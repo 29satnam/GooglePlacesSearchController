@@ -139,6 +139,8 @@ open class GooglePlacesSearchController: UISearchController, UISearchBarDelegate
         self.hidesNavigationBarDuringPresentation = false
         self.definesPresentationContext = true
         self.searchBar.placeholder = searchBarPlaceholder
+        
+        self.view.backgroundColor = .white
 
     }
 }
@@ -171,8 +173,8 @@ open class GooglePlacesAutocompleteContainer: UITableViewController {
         self.strictBounds = strictBounds
         
 
-        self.view.backgroundColor = .gray
-        self.tableView.backgroundColor = .brown
+        self.view.backgroundColor = .white
+        self.tableView.backgroundColor = .white
 
     }
 }
