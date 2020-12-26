@@ -49,7 +49,6 @@ open class Place: NSObject {
 
 open class PlaceDetails: CustomStringConvertible {
     public let formattedAddress: String
-    public let placeId: String
     open var name: String? = nil
 
     open var streetNumber: String? = nil
@@ -70,11 +69,8 @@ open class PlaceDetails: CustomStringConvertible {
         guard let result = json["result"] as? [String: Any],
             let formattedAddress = result["formatted_address"] as? String
             else { return nil }
+        
         self.formattedAddress = formattedAddress
-        
-        guard let placeId = result["place_id"] as? String else { return nil }
-        self.placeId = placeId
-        
         self.name = result["name"] as? String
         
         if let addressComponents = result["address_components"] as? [[String: Any]] {
@@ -143,22 +139,12 @@ open class GooglePlacesSearchController: UISearchController, UISearchBarDelegate
         self.hidesNavigationBarDuringPresentation = false
         self.definesPresentationContext = true
         self.searchBar.placeholder = searchBarPlaceholder
-        self.searchBar.returnKeyType = .done
-        if #available(iOS 13.0, *) {
-            self.searchBar.searchTextField.delegate = gpaViewController
-        }
+
     }
 }
 
 public protocol GooglePlacesAutocompleteViewControllerDelegate: class {
     func viewController(didAutocompleteWith place: PlaceDetails)
-    @available(iOS 13.0, *)
-    func viewController(didManualCompleteWith text: String)
-}
-
-public extension GooglePlacesAutocompleteViewControllerDelegate {
-    @available(iOS 13.0, *)
-    func viewController(didManualCompleteWith text: String) {}
 }
 
 open class GooglePlacesAutocompleteContainer: UITableViewController {
@@ -172,7 +158,7 @@ open class GooglePlacesAutocompleteContainer: UITableViewController {
     private let cellIdentifier = "Cell"
     
     private var places = [Place]() {
-        didSet { tableView.reloadData() }
+        didSet {  self.tableView.contentInset = UIEdgeInsetsMake(53, 0, 0, 0); tableView.reloadData(); }
     }
     
     convenience init(delegate: GooglePlacesAutocompleteViewControllerDelegate, apiKey: String, placeType: PlaceType = .all, coordinate: CLLocationCoordinate2D, radius: Double, strictBounds: Bool) {
@@ -183,6 +169,11 @@ open class GooglePlacesAutocompleteContainer: UITableViewController {
         self.coordinate = coordinate
         self.radius = radius
         self.strictBounds = strictBounds
+        
+
+        self.view.backgroundColor = .gray
+        self.tableView.backgroundColor = .brown
+
     }
 }
 
@@ -240,7 +231,8 @@ extension GooglePlacesAutocompleteContainer: UISearchBarDelegate, UISearchResult
         var params = [
             "input": text,
             "types": placeType.rawValue,
-            "key": apiKey
+            "key": apiKey,
+            "components": "country:us"
         ]
         
         if CLLocationCoordinate2DIsValid(coordinate) {
@@ -256,17 +248,6 @@ extension GooglePlacesAutocompleteContainer: UISearchBarDelegate, UISearchResult
         }
         
         return params
-    }
-}
-
-extension GooglePlacesAutocompleteContainer: UITextFieldDelegate {
-    
-    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        guard let text = textField.text else { return false }
-        if #available(iOS 13.0, *) {
-            self.delegate?.viewController(didManualCompleteWith: text)
-        }
-        return true
     }
 }
 
